@@ -1,0 +1,46 @@
+# .github/workflows/main.yml
+
+name: Daily News Bot
+
+# 実行トリガーの設定
+on:
+  # cronジョブで自動実行
+  schedule:
+    # 毎日 UTC 21:00 に実行 (JST 6:00 に相当)
+    # cronの書式: * * * * * (分 時 日 月 曜日)
+    - cron: '0 21 * * *'
+  
+  # 手動での実行も可能にする設定
+  workflow_dispatch:
+
+# ジョブの定義
+jobs:
+  run-bot:
+    # 実行環境はUbuntuの最新版
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. リポジトリのコードをチェックアウト (作業環境にコードを持ってくる)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Python環境のセットアップ
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # 使用したいPythonのバージョンを指定
+
+      # 3. 必要なライブラリのインストール
+      - name: Install dependencies
+        run: |
+          # 必要なライブラリをインストール
+          pip install requests beautifulsoup4 openai feedparser
+
+      # 4. Pythonスクリプトの実行
+      - name: Run Python Script
+        run: python news_bot.py
+        env: # 環境変数の設定 (GitHub Secretsから読み込む)
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          YAHOO_RSS_URL: ${{ secrets.YAHOO_RSS_URL }}
